@@ -1,93 +1,106 @@
 //#full-example
 package com.lightbend.akka.sample
 
-import akka.actor.{ Actor, ActorLogging, ActorRef, ActorSystem, Props }
+import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props}
 
 //#greeter-companion
 //#greeter-messages
 object Greeter {
-  //#greeter-messages
-  def props(message: String, printerActor: ActorRef): Props = Props(new Greeter(message, printerActor))
-  //#greeter-messages
-  final case class WhoToGreet(who: String)
-  case object Greet
+    //#greeter-messages
+    def props(message: String, printerActor: ActorRef): Props = Props(new Greeter(message, printerActor))
+
+    //#greeter-messages
+    final case class WhoToGreet(who: String)
+
+    case object Greet
+
 }
+
 //#greeter-messages
 //#greeter-companion
 
 //#greeter-actor
 class Greeter(message: String, printerActor: ActorRef) extends Actor {
-  import Greeter._
-  import Printer._
 
-  var greeting = ""
+    import Greeter._
+    import Printer._
 
-  def receive = {
-    case WhoToGreet(who) =>
-      greeting = s"$message, $who"
-    case Greet           =>
-      //#greeter-send-message
-      printerActor ! Greeting(greeting)
-      //#greeter-send-message
-  }
+    var greeting = ""
+
+    def receive = {
+        case WhoToGreet(who) =>
+            greeting = s"$message, $who"
+        case Greet =>
+            //#greeter-send-message
+            printerActor ! Greeting(greeting)
+        //#greeter-send-message
+    }
 }
+
 //#greeter-actor
 
 //#printer-companion
 //#printer-messages
 object Printer {
-  //#printer-messages
-  def props: Props = Props[Printer]
-  //#printer-messages
-  final case class Greeting(greeting: String)
+    //#printer-messages
+    def props: Props = Props[Printer]
+
+    //#printer-messages
+    final case class Greeting(greeting: String)
+
 }
+
 //#printer-messages
 //#printer-companion
 
 //#printer-actor
 class Printer extends Actor with ActorLogging {
-  import Printer._
 
-  def receive = {
-    case Greeting(greeting) =>
-      log.info(s"Greeting received (from ${sender()}): $greeting")
-  }
+    import Printer._
+
+    def receive = {
+        case Greeting(greeting) =>
+            log.info(s"Greeting received (from ${sender()}): $greeting")
+    }
 }
+
 //#printer-actor
 
 //#main-class
 object AkkaQuickstart extends App {
-  import Greeter._
 
-  // Create the 'helloAkka' actor system
-  val system: ActorSystem = ActorSystem("helloAkka")
+    import Greeter._
 
-  //#create-actors
-  // Create the printer actor
-  val printer: ActorRef = system.actorOf(Printer.props, "printerActor")
+    // Create the 'helloAkka' actor system
+    val system: ActorSystem = ActorSystem("helloAkka")
 
-  // Create the 'greeter' actors
-  val howdyGreeter: ActorRef =
-    system.actorOf(Greeter.props("Howdy", printer), "howdyGreeter")
-  val helloGreeter: ActorRef =
-    system.actorOf(Greeter.props("Hello", printer), "helloGreeter")
-  val goodDayGreeter: ActorRef =
-    system.actorOf(Greeter.props("Good day", printer), "goodDayGreeter")
-  //#create-actors
+    //#create-actors
+    // Create the printer actor
+    val printer: ActorRef = system.actorOf(Printer.props, "printerActor")
 
-  //#main-send-messages
-  howdyGreeter ! WhoToGreet("Akka")
-  howdyGreeter ! Greet
+    // Create the 'greeter' actors
+    val howdyGreeter: ActorRef =
+        system.actorOf(Greeter.props("Howdy", printer), "howdyGreeter")
+    val helloGreeter: ActorRef =
+        system.actorOf(Greeter.props("Hello", printer), "helloGreeter")
+    val goodDayGreeter: ActorRef =
+        system.actorOf(Greeter.props("Good day", printer), "goodDayGreeter")
+    //#create-actors
 
-  howdyGreeter ! WhoToGreet("Lightbend")
-  howdyGreeter ! Greet
+    //#main-send-messages
+    howdyGreeter ! WhoToGreet("Akka")
+    howdyGreeter ! Greet
 
-  helloGreeter ! WhoToGreet("Scala")
-  helloGreeter ! Greet
+    howdyGreeter ! WhoToGreet("Lightbend")
+    howdyGreeter ! Greet
 
-  goodDayGreeter ! WhoToGreet("Play")
-  goodDayGreeter ! Greet
-  //#main-send-messages
+    helloGreeter ! WhoToGreet("Scala")
+    helloGreeter ! Greet
+
+    goodDayGreeter ! WhoToGreet("Play")
+    goodDayGreeter ! Greet
+    //#main-send-messages
 }
+
 //#main-class
 //#full-example
